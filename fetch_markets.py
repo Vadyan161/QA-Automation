@@ -3,32 +3,35 @@ import json
 import os
 
 
-def fetch_markets(vs_currency='usd', per_page=50):
-    """Запрашивает данные по рынкам у CoinGecko. Бросает исключение, если что-то пошло не так."""
-    url = 'https://api.coingecko.com/api/v3/coins/markets'
-    payload = {'vs_currency': vs_currency, 'per_page': per_page}
-    r = requests.get(url, params=payload, timeout=3)
-    r.raise_for_status()
-    return r.json()
+class MarketDataClient:
+    def __init__(self, base_url= 'https://api.coingecko.com/api/v3', timeout=10):
+        self.base_url = base_url
+        self.timeout = timeout
 
-    
+
+    def _get(self, path, params= None):
+        url = self.base_url+path
+        r = requests.get(url, params=params, timeout=self.timeout)
+        r.raise_for_status()
+        return r.json()
+
+    def fetch_markets(self, vs_currency='usd', per_page=50):
+        playload = {'vs_currency':vs_currency, 'per_page':per_page}
+        return self._get(f'/coins/markets', params = playload)
+
+    def fetch_prices(self, coin_ids):
+        # # os.makedirs(os.path.dirname(path:="data/prices.json"), exist_ok=True)
+        # # with open(path, "w", encoding="utf-8") as f:
+        # #         json.dump(result, f, ensure_ascii=False, indent=2)
+        playload = {'ids':",".join(coin_ids)  ,'vs_currencies':'usd'}
+        return self._get(f'/simple/price', params = playload)
+
+
 def save_json(data, path="data/markets.json"):
     """Сохраняет данные в JSON. Бросает исключение при сбое."""
     os.makedirs(os.path.dirname(path), exist_ok=True) #делается проверка, если такой папки нет, то создает, если есть, то без ошибок продолжает в ней работу
     with open(path, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
-
-
-def fetch_prices(coin_ids):
-    """Запрашивает данные по монетам у CoinGecko. Бросает исключение, если что-то пошло не так."""
-    url =  'https://api.coingecko.com/api/v3/simple/price'
-    playload = {'ids':",".join(coin_ids)  ,'vs_currencies':'usd'}
-    r=requests.get(url, params=playload, timeout=3)
-    r.raise_for_status()
-    return r.json()
-    # os.makedirs(os.path.dirname(path:="data/prices.json"), exist_ok=True)
-    # with open(path, "w", encoding="utf-8") as f:
-    #         json.dump(result, f, ensure_ascii=False, indent=2)
 
 
 def top_by_field(markets, field, n):
@@ -60,8 +63,9 @@ def find_missing_field(markets, field):
 
 
 def main(vs_currency='usd', per_page=10):
+    client = MarketDataClient()
     try:
-        result = fetch_markets(vs_currency, per_page)
+        markets = client.fetch_markets(vs_currency, per_page)
     except requests.exceptions.JSONDecodeError:
         print('Не удалось разобрать ответ сервера как JSON')
         return
@@ -78,21 +82,16 @@ def main(vs_currency='usd', per_page=10):
         print(f'Непредвиденная ошибка запроса: {e}')
         return
 
-    if not result:
+    if not markets:
         print('API вернул пустой список данных')
         return
     else:
         try:
-            test = [{'id':'usd', 'image': None}, {'id': 'bitcoin'}, {'id': 'eth', 'image': 1}]
-            save_json(result)
-            print(f'Сохранено {len(result)} монет')
-            for i in top_by_field(result, "market_cap", 5):
+            save_json(markets)
+            print(f'Сохранено {len(markets)} монет')
+            for i in top_by_field(markets, "market_cap", 5):
                 print(i)
-            for i in top_by_field(result, "total_volume", 5):
-                print(i)
-            for i in find_missing_field(result, "image"):
-                print(i)
-            for i in find_missing_field(test, "image"):
+            for i in top_by_field(markets, "total_volume", 5):
                 print(i)
         except OSError as e:
             print(f'Не удалось записать файл: {e}')
@@ -102,7 +101,9 @@ def main(vs_currency='usd', per_page=10):
             return
 
     try:
-        print(fetch_prices(coin_ids=['bitcoin', 'ethereum', 'tether']))
+        prices=client.fetch_prices(coin_ids=['bitcoin', 'ethereum', 'tether'])
+        for  k, v in prices.items():
+            print(f'{k}:{v}')
     except requests.exceptions.JSONDecodeError:
         print('Не удалось разобрать ответ сервера как JSON')
         return
@@ -118,7 +119,6 @@ def main(vs_currency='usd', per_page=10):
     except requests.exceptions.RequestException as e:
         print(f'Непредвиденная ошибка запроса: {e}')
         return
-
     
 
 if __name__ == "__main__":
