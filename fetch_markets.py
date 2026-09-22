@@ -7,17 +7,24 @@ class MarketDataClient:
     def __init__(self, base_url= 'https://api.coingecko.com/api/v3', timeout=10):
         self.base_url = base_url
         self.timeout = timeout
+        self.session = requests.Session()
+
+        self.session.headers.update({
+            "User-Agent": "MyCustomApp/1.0"
+        })
 
 
     def _get(self, path, params= None):
         url = self.base_url+path
-        r = requests.get(url, params=params, timeout=self.timeout)
+        r = self.session.get(url, params=params, timeout=self.timeout)
         r.raise_for_status()
         return r.json()
+
 
     def fetch_markets(self, vs_currency='usd', per_page=50):
         playload = {'vs_currency':vs_currency, 'per_page':per_page}
         return self._get(f'/coins/markets', params = playload)
+
 
     def fetch_prices(self, coin_ids):
         # # os.makedirs(os.path.dirname(path:="data/prices.json"), exist_ok=True)
@@ -26,6 +33,29 @@ class MarketDataClient:
         playload = {'ids':",".join(coin_ids)  ,'vs_currencies':'usd'}
         return self._get(f'/simple/price', params = playload)
 
+
+    def get_coins(self):
+        coins_raw = [Coin(item) for item in self.fetch_markets()]
+        return coins_raw
+
+class Coin:
+    def __init__ (self, raw: dict):
+        self.id = raw.get('id')
+        self.symbol = raw.get('symbol')
+        self.name = raw.get('name')
+        self.price = raw.get('current_price')
+        self.market_cap = raw.get('market_cap')
+
+
+    def is_valid (self):
+        flag = False
+        if all(v is not  None for v in (self.id, self.symbol, self.name, self.price)):
+            if self.price > 0:
+                flag = True
+        return flag
+            
+
+        
 
 def save_json(data, path="data/markets.json"):
     """Сохраняет данные в JSON. Бросает исключение при сбое."""
@@ -119,6 +149,14 @@ def main(vs_currency='usd', per_page=10):
     except requests.exceptions.RequestException as e:
         print(f'Непредвиденная ошибка запроса: {e}')
         return
+
+    # coins = client.get_coins()
+    coins = [Coin(item) for item in markets]
+    count = 0
+    for c in coins:
+        if not c.is_valid():
+            count += 1
+    print(f'Невалидных монет: {count}')
     
 
 if __name__ == "__main__":
