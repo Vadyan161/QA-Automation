@@ -22,16 +22,16 @@ class MarketDataClient:
 
 
     def fetch_markets(self, vs_currency='usd', per_page=50):
-        playload = {'vs_currency':vs_currency, 'per_page':per_page}
-        return self._get(f'/coins/markets', params = playload)
+        payload = {'vs_currency':vs_currency, 'per_page':per_page}
+        return self._get(path=f'/coins/markets', params = payload)
 
 
     def fetch_prices(self, coin_ids):
         # # os.makedirs(os.path.dirname(path:="data/prices.json"), exist_ok=True)
         # # with open(path, "w", encoding="utf-8") as f:
         # #         json.dump(result, f, ensure_ascii=False, indent=2)
-        playload = {'ids':",".join(coin_ids)  ,'vs_currencies':'usd'}
-        return self._get(f'/simple/price', params = playload)
+        payload = {'ids':",".join(coin_ids)  ,'vs_currencies':'usd'}
+        return self._get(f'/simple/price', params = payload)
 
 
     def get_coins(self):
