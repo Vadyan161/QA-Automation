@@ -22,13 +22,13 @@ class MarketDataClient:
 
 
     def fetch_markets(self, vs_currency='usd', per_page=50):
-        playload = {'vs_currency':vs_currency, 'per_page':per_page}
-        return self._get(f'/coins/markets', params = playload)
+        payload = {'vs_currency':vs_currency, 'per_page':per_page}
+        return self._get(f'/coins/markets', params = payload)
 
 
     def fetch_prices(self, coin_ids):
-        playload = {'ids':",".join(coin_ids)  ,'vs_currencies':'usd'}
-        return self._get(f'/simple/price', params = playload)
+        payload = {'ids':",".join(coin_ids)  ,'vs_currencies':'usd'}
+        return self._get(f'/simple/price', params = payload)
 
 
     def get_coins(self):
