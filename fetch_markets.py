@@ -23,12 +23,12 @@ class MarketDataClient:
 
     def fetch_markets(self, vs_currency='usd', per_page=50):
         payload = {'vs_currency':vs_currency, 'per_page':per_page}
-        return self._get(f'/coins/markets', params = payload)
+        return self._get('/coins/markets', params = payload)
 
 
     def fetch_prices(self, coin_ids):
         payload = {'ids':",".join(coin_ids)  ,'vs_currencies':'usd'}
-        return self._get(f'/simple/price', params = payload)
+        return self._get('/simple/price', params = payload)
 
 
     def get_coins(self):
@@ -45,13 +45,8 @@ class Coin:
 
 
     def is_valid (self):
-        if all(v is not  None for v in (self.id, self.symbol, self.name, self.price)) and self.price > 0:
-            return True
-        else:
-            return False
-            
+        return all(v is not None for v in (self.id, self.symbol, self.name, self.price)) and self.price > 0
 
-        
 
 def save_json(data, path="data/markets.json"):
     """Сохраняет данные в JSON. Бросает исключение при сбое."""
