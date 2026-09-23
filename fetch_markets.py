@@ -23,12 +23,12 @@ class MarketDataClient:
 
     def fetch_markets(self, vs_currency='usd', per_page=50):
         payload = {'vs_currency':vs_currency, 'per_page':per_page}
-        return self._get(f'/coins/markets', params = payload)
+        return self._get('/coins/markets', params = payload)
 
 
     def fetch_prices(self, coin_ids):
         payload = {'ids':",".join(coin_ids)  ,'vs_currencies':'usd'}
-        return self._get(f'/simple/price', params = payload)
+        return self._get('/simple/price', params = payload)
 
 
     def get_coins(self):
@@ -45,12 +45,8 @@ class Coin:
 
 
     def is_valid (self):
-        if all(v is not  None for v in (self.id, self.symbol, self.name, self.price)):
-            if self.price > 0:
-                return True
-            
+        return all(v is not None for v in (self.id, self.symbol, self.name, self.price)) and self.price > 0
 
-        
 
 def save_json(data, path="data/markets.json"):
     """Сохраняет данные в JSON. Бросает исключение при сбое."""
@@ -65,7 +61,6 @@ def top_by_field(markets, field, n):
     print(f'\nТоп {n} монет по полю {field}:')
     d = list()
     for i in sorted_data[:n]:
-        # print(i.get('id'), i.get(field))
         temp_dict= {i.get('id'): i.get(field)}
         d.append(temp_dict)
     return d
@@ -77,7 +72,6 @@ def find_missing_field(markets, field):
     print(f'\nМонеты у которых нет поля {field}:')
     for i in markets:
         if field not in i:
-            # print(f'{i[id]} - нет поля {field}')
             temp_dict={'id': i['id']}
             d.append(temp_dict)
         else:
@@ -145,7 +139,6 @@ def main(vs_currency='usd', per_page=10):
         print(f'Непредвиденная ошибка запроса: {e}')
         return
 
-    # coins = client.get_coins()
     coins = [Coin(item) for item in markets]
     count = 0
     for c in coins:
