@@ -22,16 +22,13 @@ class MarketDataClient:
 
 
     def fetch_markets(self, vs_currency='usd', per_page=50):
-        payload = {'vs_currency':vs_currency, 'per_page':per_page}
-        return self._get(path=f'/coins/markets', params = payload)
+        playload = {'vs_currency':vs_currency, 'per_page':per_page}
+        return self._get(f'/coins/markets', params = playload)
 
 
     def fetch_prices(self, coin_ids):
-        # # os.makedirs(os.path.dirname(path:="data/prices.json"), exist_ok=True)
-        # # with open(path, "w", encoding="utf-8") as f:
-        # #         json.dump(result, f, ensure_ascii=False, indent=2)
-        payload = {'ids':",".join(coin_ids)  ,'vs_currencies':'usd'}
-        return self._get(f'/simple/price', params = payload)
+        playload = {'ids':",".join(coin_ids)  ,'vs_currencies':'usd'}
+        return self._get(f'/simple/price', params = playload)
 
 
     def get_coins(self):
@@ -48,11 +45,9 @@ class Coin:
 
 
     def is_valid (self):
-        flag = False
         if all(v is not  None for v in (self.id, self.symbol, self.name, self.price)):
             if self.price > 0:
-                flag = True
-        return flag
+                return True
             
 
         
